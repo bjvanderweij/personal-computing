@@ -1,0 +1,37 @@
+- name: Bootstrap development environment
+  hosts: localhost
+  vars:
+    username: bastiaan
+  vars_prompt:
+  - name: ssh_passphrase
+    prompt: Enter the SSH private key passphrase
+  - name: ssh_email
+    prompt: Enter the email to attach to SSH private key
+
+  tasks:
+  - name: APT packages
+    become: yes
+    ansible.builtin.apt:
+      name:
+        - git
+        - openssh-client
+        - neovim
+        - vim-gtk
+        - stow
+      state: present
+  - name: SSH directory
+    ansible.builtin.file:
+      path: '{{ ansible_env.HOME }}/.ssh'
+      state: directory
+  - name: SSH keypair
+    community.crypto.openssh_keypair:
+      path: '{{ ansible_env.HOME }}/.ssh/id_ed25519'
+      type: ed25519
+      passphrase: '{{ ssh_passphrase }}'
+      regenerate: partial_idempotence
+      comment: '{{ ssh_email }}'
+      private_key_format: ssh
+  - name: Dotfiles
+    shell: "stow dotfiles --target {{ ansible_env.HOME }} --verbose=2"
+    register: result
+    changed_when: 'result.stderr is search("LINK: ")'
