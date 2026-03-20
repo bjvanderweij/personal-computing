@@ -9,29 +9,57 @@
     prompt: Enter the email to attach to SSH private key
 
   tasks:
+  - name: Bash completion
+    tags:
+    - all
+    become: true
+    ansible.builtin.apt:
+      name:
+        - bash-completion
+      state: present
   - name: APT packages
-    become: yes
+    tags:
+    - all
+    become: true
     ansible.builtin.apt:
       name:
         - git
         - openssh-client
         - neovim
-        - vim-gtk
+        - vim-gtk3
         - stow
+        - git-absorb
+        - ssh-askpass-gnome # For SSH keys
+        - ripgrep
       state: present
   - name: SSH directory
+    tags:
+    - all
     ansible.builtin.file:
       path: '{{ ansible_env.HOME }}/.ssh'
       state: directory
-  - name: SSH keypair
-    community.crypto.openssh_keypair:
-      path: '{{ ansible_env.HOME }}/.ssh/id_ed25519'
-      type: ed25519
-      passphrase: '{{ ssh_passphrase }}'
-      regenerate: partial_idempotence
-      comment: '{{ ssh_email }}'
-      private_key_format: ssh
+  - ignore_errors: true 
+    tags:
+    - all
+    block:
+    - name: SSH keypair
+      community.crypto.openssh_keypair:
+        path: '{{ ansible_env.HOME }}/.ssh/id_ed25519'
+        type: ed25519
+        passphrase: '{{ ssh_passphrase }}'
+        regenerate: partial_idempotence
+        comment: '{{ ssh_email }}'
+        private_key_format: ssh
+  - name: The lounge
+    tags:
+    - personal
+    ansible.builtin.file:
+      path: '{{ ansible_env.HOME }}/the-lounge'
+      state: directory
   - name: Dotfiles
-    shell: "stow dotfiles --target {{ ansible_env.HOME }} --verbose=2"
+    tags:
+    - all
+    - dotfiles
+    shell: "stow -d build dotfiles --target {{ ansible_env.HOME }} --verbose=2"
     register: result
     changed_when: 'result.stderr is search("LINK: ")'

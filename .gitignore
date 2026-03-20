@@ -10,3 +10,5 @@ wheels/
 .venv
 
 *.sw[op]
+
+build/

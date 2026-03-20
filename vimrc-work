@@ -1,0 +1,202 @@
+set t_Co=256
+
+set nocompatible
+set number
+set showcmd
+set laststatus=2
+set history=200
+
+syntax on
+
+filetype plugin on
+filetype indent on
+
+" automatically use prolog syntax highlighting for .pl files
+autocmd Filetype pl set ft=prolog
+
+" automatically use markdown syntax highlighting for .md files
+autocmd BufRead,BufNewFile *.md set filetype=markdown
+
+" replace tab by four spaces
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set expandtab
+
+" For some files I want two spaces tab lengths
+autocmd FileType htmldjango setlocal shiftwidth=2 tabstop=2 softtabstop=2
+autocmd FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
+autocmd FileType css setlocal shiftwidth=2 tabstop=2 softtabstop=2
+autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+autocmd FileType yaml setlocal shiftwidth=2 softtabstop=2 expandtab
+
+" show an 80 char column for a bunch of filetypes
+autocmd FileType python,bash,lisp,cpp set colorcolumn=80
+
+" disable color column for these files:
+autocmd FileType htmldjango,html,css,javascript,text set cc=
+autocmd FileType markdown,mkd,md,text set cc= 
+
+set backspace=2
+
+set dictionary=/usr/share/dict/words
+set suffixesadd=.pl,.java,.c,.cpp,.m
+
+" indent options
+set autoindent
+" set smartindent
+
+" highlight the search results
+set hls
+" show the `best match so far' as search strings are typed:
+set incsearch
+
+" Change j and k behavior to move through rows on the screen, not lines
+nmap j gj
+nmap k gk
+
+vmap > >gv
+vmap < <gv
+
+" temporary files
+set directory=~/tmp,.,/var/tmp,/tmp
+
+" quickly open your .vimrc
+map <F9> :sp ~/.vimrc<Enter>
+"
+" Mapping Ctrl-Enter to opening Quickfix list
+map <C-CR> <CR>:copen<CR>
+
+" up and down arrow keys work as expected when lines are wrapped
+map <Up> g<Up>
+map <Down> g<Down>
+
+" Ctrl-C and Esc behave slightly different. Ctrl-C skips the InsertLeave
+" command and goes straight to normal mode. This shortcut makes the behave the
+" same
+vnoremap <C-c> <Esc>
+" Set line numbers
+nmap \n :setlocal number!<CR>
+" Set paste mode
+nmap \p :set paste!<CR>
+" Set nohl
+nmap \l :nohlsearch<CR>
+
+" =============== BUFFERS =================
+
+" Save undo history when switching buffers
+set hidden
+
+" To open a new empty buffer
+" This replaces :tabnew which I used to bind to this mapping
+nmap <leader>T :enew<cr>
+" Move to the next buffer
+nmap <leader>l :bnext<CR>
+" Move to the previous buffer
+nmap <leader>h :bprevious<CR>
+" Close the current buffer and move to the previous one
+" This replicates the idea of closing a tab
+nmap <leader>bq :bp <BAR> bd #<CR>
+" Go to previous buffer 
+nmap <leader>bb :b#<CR>
+
+" Show all open buffers and their status
+nmap <leader>bl :ls<CR>
+
+let g:vim_markdown_folding_disabled=1
+
+"-- pandoc Markdown+LaTeX -------------------------------------------
+
+function! s:MDSettings()
+    " adjust syntax highlighting for LaTeX parts
+    "   inline formulas:
+    syntax region Statement oneline matchgroup=Delimiter start="\$" end="\$"
+    "   mathjax math
+    syntax region Statement matchgroup=Delimiter start="\$\$" end="\$\$" contains=Statement
+    "   environments:
+    syntax region Statement matchgroup=Delimiter start="\\begin{.*}" end="\\end{.*}" contains=Statement
+    "   commands:
+    syntax region Statement matchgroup=Delimiter start="{" end="}" contains=Statement
+endfunction
+
+autocmd FileType markdown :call <SID>MDSettings()
+
+:nmap \t :NERDTreeToggle<CR>
+
+" ALE
+" Enable completion where available.
+" This setting must be set before ALE is loaded.
+"
+" You should not turn this setting on if you wish to use ALE as a completion
+" source for other completion plugins, like Deoplete.
+let g:ale_completion_enabled = 1
+set omnifunc=ale#completion#OmniFunc
+let g:ale_completion_autoimport = 0
+let g:airline#extensions#ale#enabled = 1
+
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+execute pathogen#infect()
+
+call plug#begin()
+
+" List your plugins here
+" Plug 'junegunn/fzf'
+
+" Plug 'junegunn/fzf.vim'
+
+Plug 'tpope/vim-fugitive'
+
+call plug#end()
+
+" read project-specific .vimrc files
+set exrc
+" do not allow autocmd commands from files not owned by me from here on
+set secure 
+
+" Thoughtbot: How to Do 90% of What Plugins Do (With Just Vim) https://www.youtube.com/watch?v=XA2WjJbmmoM
+
+set path+=**
+
+" Echo the relative path and current line of a file
+command Curline echo join([expand('%'),  line(".")], ':')
+
+" Display python docs
+nnoremap <buffer> H :<C-u>execute "!pydoc3 " . expand("<cword>")<CR>
+
+" 2024/2/24
+" insert current date (useful for journal)
+nnoremap <leader>n o# <C-R>=strftime("%Y/%m/%d")<CR><CR><CR>
+" Run python on current file
+nnoremap <leader>py :!python %<CR>
+" Run python on current selection
+vnoremap <leader>py :!python<CR>
+" Pretty-print currently selected JSON
+vnoremap <leader>jq :!jq<CR>
+
+" Allow moving lines up and down with Alt-j and Alt-k
+nnoremap <A-j> :m .+1<CR>==
+nnoremap <A-k> :m .-2<CR>==
+inoremap <A-j> <Esc>:m .+1<CR>==gi
+inoremap <A-k> <Esc>:m .-2<CR>==gi
+vnoremap <A-j> :m '>+1<CR>gv=gv
+vnoremap <A-k> :m '<-2<CR>gv=gv
+
+" Navigate between ALE errors
+nmap <silent> <C-k> <Plug>(ale_previous_wrap)
+nmap <silent> <C-j> <Plug>(ale_next_wrap)
+
+syntax enable
+colorscheme monokai
+
+nmap ; :Buffers<CR>
+nnoremap <leader>g :GFiles<CR>
+" Ripgrep alias
+nnoremap <leader>r :Rg<CR>  
+
+nmap <leader>f :NERDTreeFind<CR>
+
