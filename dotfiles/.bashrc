@@ -29,8 +29,8 @@ export PATH="$PATH:/home/bastiaan/.local/bin"
 
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+eval "$(pyenv init -)" #  adds noticable lag to shell startup
+# eval "$(pyenv virtualenv-init -)"  # commented out because it slows down the shell
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
