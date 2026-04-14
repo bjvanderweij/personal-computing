@@ -18,6 +18,7 @@ alias gco='git checkout'
 alias gst='git status'
 alias gpl='git pull'
 alias gps='git push'
+alias gfx='git commit --fixup $(git log $(git merge-base main HEAD)..HEAD --oneline| fzf| cut -d" " -f1)'
 alias redshift='
 temp_credentials=$(AWS_PROFILE=wair-$ENVIRONMENT aws redshift-serverless get-credentials --workgroup wair-$ENVIRONMENT);
 PGCLIENTENCODING=utf-8 PGSSLMODE=require PGPASSWORD=$(echo $temp_credentials | jq -r .dbPassword) AWS_PROFILE=wair-$ENVIRONMENT pgcli -p 5439 -h redshift-private-db.$ENVIRONMENT.infra.wair.network -u $(echo $temp_credentials | jq -r .dbUser) -d ${DBNAME:-wair}
